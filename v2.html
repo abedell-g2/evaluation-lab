@@ -262,16 +262,18 @@ body{font-family:Figtree,system-ui,sans-serif;background:var(--color-g2-bg);colo
 .evidence-modal-title{font-size:20px;font-weight:760;color:var(--color-g2-dark);line-height:1.18;letter-spacing:-.01em}
 .evidence-modal-close{border:0;background:#f8f9fb;color:#64748b;width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .evidence-modal-close .ui-icon{width:16px;height:16px}
-.evidence-modal-body{padding:1.2rem 1.35rem 1.35rem;color:var(--color-g2-muted);font-size:14px;line-height:1.6;overflow:auto}
-.evidence-score-row{display:flex;align-items:center;gap:14px;margin-bottom:1.15rem;padding-bottom:1.1rem;border-bottom:1px solid #eef2f7}
-.evidence-score-num{font-size:34px;font-weight:820;line-height:1;letter-spacing:-.025em}
-.evidence-score-label{font-size:15px;font-weight:760;color:var(--color-g2-dark);line-height:1.2}
-.evidence-score-sub{font-size:13px;color:#64748b;margin-top:3px}
-.evidence-section-label{font-size:11px;font-weight:780;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:1.1rem 0 .5rem}
-.evidence-what{font-size:14px;color:#475569;line-height:1.6}
-.evidence-quote{background:#f8fafc;border-left:3px solid #d8dee8;border-radius:0 10px 10px 0;padding:.85rem 1rem;margin-bottom:.75rem}
-.evidence-quote-text{font-size:13.5px;color:#1e293b;line-height:1.55;font-style:italic}
-.evidence-quote-source{font-size:12px;color:#94a3b8;margin-top:.45rem}
+.evidence-modal-body{padding:1.25rem 1.45rem 1.45rem;color:var(--color-g2-muted);font-size:15px;line-height:1.62;overflow:auto}
+.evidence-score-row{display:flex;align-items:center;gap:12px;margin:.25rem 0 .75rem}
+.evidence-score-num{font-size:38px;font-weight:820;line-height:1;letter-spacing:-.025em}
+.evidence-score-denom{color:#94a3b8;font-size:.58em;font-weight:650;letter-spacing:-.01em}
+.evidence-score-badge{display:inline-flex;align-items:center;border:1px solid #e2e8f0;background:#f8fafc;color:#475569;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:760;line-height:1}
+.evidence-section-label{font-size:12px;font-weight:780;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin:1.05rem 0 .55rem}
+.evidence-what{font-size:15px;color:#475569;line-height:1.62;margin-bottom:1.15rem}
+.evidence-source-rule{border:0;border-top:1px solid #eef2f7;margin:1.05rem 0 1rem}
+.evidence-quote{background:#f8fafc;border-left:3px solid #d8dee8;border-radius:0 10px 10px 0;padding:.9rem 1rem;margin-bottom:.8rem}
+.evidence-quote-text{font-size:14.5px;color:#1e293b;line-height:1.58}
+.evidence-quote-source{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#94a3b8;margin-top:.55rem}
+.evidence-source-logo{width:16px;height:16px;border-radius:4px;object-fit:contain;flex:0 0 auto}
 .evidence-quote-source a{color:var(--color-g2-purple);text-decoration:none;font-weight:650}
 .evidence-quote-source a:hover{text-decoration:underline}
 .evidence-empty{font-size:13px;color:#94a3b8;font-style:italic}
@@ -1225,6 +1227,15 @@ function escapeEvidenceHtml(value) {
   return String(value ?? '').replace(/[&<>"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));
 }
 
+function sourceLogoUrl(url) {
+  try {
+    const domain = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
+  } catch {
+    return '';
+  }
+}
+
 function openModal(groupIndex, skillIndex, vendorKey) {
   const trigger = window.event?.currentTarget || window.event?.target;
   const row = trigger?.closest('tr');
@@ -1243,18 +1254,21 @@ function openModal(groupIndex, skillIndex, vendorKey) {
     const text = escapeEvidenceHtml(quote.t);
     const source = escapeEvidenceHtml(quote.s || 'Source');
     const url = escapeEvidenceHtml(quote.u || '#');
-    return `<div class="evidence-quote"><div class="evidence-quote-text">&ldquo;${text}&rdquo;</div><div class="evidence-quote-source">Source: <a href="${url}" target="_blank" rel="noopener">${source}</a></div></div>`;
+    const logo = sourceLogoUrl(quote.u);
+    const logoHtml = logo ? `<img class="evidence-source-logo" src="${escapeEvidenceHtml(logo)}" alt="" aria-hidden="true">` : '';
+    return `<div class="evidence-quote"><div class="evidence-quote-text">&ldquo;${text}&rdquo;</div><div class="evidence-quote-source">${logoHtml}<a href="${url}" target="_blank" rel="noopener">${source}</a></div></div>`;
   }).join('');
 
   document.getElementById('evidenceModalTitle').textContent = skillName;
   document.getElementById('evidenceModalBody').innerHTML = evidence ? `
-    <div class="evidence-score-row">
-      <div class="evidence-score-num" style="color:${color}">${score}/5</div>
-      <div><div class="evidence-score-label">${label}</div><div class="evidence-score-sub">${escapeEvidenceHtml(vendor.label)}</div></div>
-    </div>
     <div class="evidence-section-label">What the evidence shows</div>
+    <div class="evidence-score-row">
+      <div class="evidence-score-num" style="color:${color}">${score}<span class="evidence-score-denom">/5</span></div>
+      <div class="evidence-score-badge">${label}</div>
+    </div>
     <div class="evidence-what">${escapeEvidenceHtml(evidence.what)}</div>
-    <div class="evidence-section-label">Review verbatims &amp; sources</div>
+    <hr class="evidence-source-rule">
+    <div class="evidence-section-label">Review sources</div>
     ${quotes || '<div class="evidence-empty">No public verbatims found for this specific skill.</div>'}
   ` : `
     <div class="evidence-empty">Evidence detail is not available for ${escapeEvidenceHtml(fallbackTitle)}.</div>
