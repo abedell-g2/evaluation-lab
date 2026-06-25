@@ -2,6 +2,7 @@
 
 Prototype exploration for customer experience agent evaluation pages.
 
-## Prototype
+## Prototypes
 
-The current prototype lives at `index.html` and publishes through GitHub Pages.
+- V1: `index.html`
+- V2 working copy: `v2.html`
