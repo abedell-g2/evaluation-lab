@@ -1,0 +1,20 @@
+v2.html
+  s_8fc6ae64538944::t_49a66d5c019e39 268-269,277
+  s_8fc6ae64538944::t_2b067597d94f99 1239-1242,1259,1271
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.1",
+  "base_commit_sha": "1b4fbf589129173c22de48914286b2a03ecd74ee",
+  "prompts": {},
+  "sessions": {
+    "s_8fc6ae64538944": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efc8f-d3ed-7a22-8812-34d489716779",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Austin Bedell <abedell@g2.com>"
+    }
+  }
+}
