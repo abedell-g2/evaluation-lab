@@ -253,12 +253,24 @@ body{font-family:Figtree,system-ui,sans-serif;background:var(--color-g2-bg);colo
 .matrix-foot .score-legend{padding-top:0}
 .modal-backdrop{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(32,31,35,.38);padding:1.5rem}
 .modal-backdrop.open{display:flex}
-.evidence-modal{width:min(440px,100%);background:#fff;border:1px solid var(--color-g2-border);border-radius:20px;box-shadow:0 18px 60px rgba(15,23,42,.22);overflow:hidden}
+.evidence-modal{width:min(520px,100%);max-height:min(720px,calc(100vh - 3rem));background:#fff;border:1px solid var(--color-g2-border);border-radius:20px;box-shadow:0 18px 60px rgba(15,23,42,.22);overflow:hidden;display:flex;flex-direction:column}
 .evidence-modal-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:1rem 1.1rem;border-bottom:1px solid var(--color-g2-border)}
 .evidence-modal-title{font-size:15px;font-weight:700;color:var(--color-g2-dark);line-height:1.35}
 .evidence-modal-close{border:0;background:#f8f9fb;color:#64748b;width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .evidence-modal-close .ui-icon{width:16px;height:16px}
-.evidence-modal-body{padding:1rem 1.1rem;color:var(--color-g2-muted);font-size:13px;line-height:1.55}
+.evidence-modal-body{padding:1rem 1.1rem;color:var(--color-g2-muted);font-size:13px;line-height:1.55;overflow:auto}
+.evidence-score-row{display:flex;align-items:center;gap:12px;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #eef2f7}
+.evidence-score-num{font-size:30px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.evidence-score-label{font-size:14px;font-weight:750;color:var(--color-g2-dark);line-height:1.2}
+.evidence-score-sub{font-size:12px;color:#94a3b8;margin-top:2px}
+.evidence-section-label{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;margin:.95rem 0 .45rem}
+.evidence-what{font-size:13px;color:#475569;line-height:1.55}
+.evidence-quote{background:#f8fafc;border-left:3px solid #e2e8f0;border-radius:0 9px 9px 0;padding:.7rem .9rem;margin-bottom:.65rem}
+.evidence-quote-text{font-size:12.5px;color:#1e293b;line-height:1.5;font-style:italic}
+.evidence-quote-source{font-size:11px;color:#94a3b8;margin-top:.35rem}
+.evidence-quote-source a{color:var(--color-g2-purple);text-decoration:none;font-weight:650}
+.evidence-quote-source a:hover{text-decoration:underline}
+.evidence-empty{font-size:13px;color:#94a3b8;font-style:italic}
 .evidence-meta{display:grid;gap:6px;margin-top:.9rem;padding-top:.9rem;border-top:1px solid #eef2f7;font-size:12px;color:#64748b}
 @media(max-width:980px){.matrix-header{grid-template-columns:1fr}.matrix-filter-select{width:100%;justify-self:stretch}.matrix-filter-menu{left:0;right:auto;width:100%}}
 @media(max-width:760px){.skill-col,.skill-name-cell{width:260px}}
@@ -710,6 +722,148 @@ const PERFORMANCE_COLORS = {
   leader:'#16a34a',
   none:'#d8dee8',
 };
+const MARKET_VENDORS=['fin','retell','decagon','forethought','sierra'];
+const MARKET_VENDOR_META={
+  fin:{label:'Fin (Intercom)',color:'#0f172a'},
+  retell:{label:'Retell AI',color:'#7c3aed'},
+  decagon:{label:'Decagon',color:'#059669'},
+  forethought:{label:'Forethought',color:'#d97706'},
+  sierra:{label:'Sierra',color:'#2563eb'},
+};
+const MARKET_SCORE_LABEL=['N/A','Weak','Partial','Capable','Strong','Leader'];
+const MARKET_SCORE_COLOR=['#94a3b8','#dc2626','#ea580c','#d97706','#059669','#16a34a'];
+
+const MARKET_EVIDENCE=[
+  {group:'resolution',label:'Customer Resolution',skills:[
+    {name:'Product & plan inquiries',desc:'Features, plans, policy info',scores:{fin:4,retell:3,decagon:4,forethought:4,sierra:5},evidence:{
+      fin:{what:'Fin reads knowledge bases and 3rd-party systems. Core use case.',quotes:[{t:'Understands customer questions well, providing accurate responses based on help articles.',s:'G2',u:'https://www.g2.com/products/fin-by-intercom/reviews'},{t:'Can struggle with nuance and produce outdated or generic replies on complex issues.',s:'G2',u:'https://www.g2.com/products/fin-by-intercom/reviews'}]},
+      retell:{what:'Can answer product questions via voice when grounded with a knowledge base. Not the primary use case.',quotes:[{t:'Handles FAQs and password resets and routine transactions with human-like conversation.',s:'Retell AI Blog',u:'https://www.retellai.com/blog/ai-customer-support-service-guide'}]},
+      decagon:{what:'Integrates knowledge bases and answers complex product questions with high accuracy.',quotes:[{t:'Quickly delivers value and integrates seamlessly with existing knowledge bases.',s:'G2 (Decagon)',u:'https://www.g2.com/products/decagon/reviews'}]},
+      forethought:{what:'Forethought Solve handles product inquiries at scale — one of its highest-deflection use cases.',quotes:[{t:'Automation features, particularly in response automation, score 8.9 on G2.',s:'G2 aggregate',u:'https://www.g2.com/products/zendesk-forethought/reviews'}]},
+      sierra:{what:"Sierra's Ghostwriter + Agent Data Platform enables deep, accurate product knowledge with personalization.",quotes:[{t:'CSAT scores around 90% — agents consistently provide accurate product info.',s:'G2 (Sierra)',u:'https://www.g2.com/products/sierra/reviews'}]},
+    }},
+    {name:'Refund & billing requests',desc:'Cancellations, eligibility, timelines',scores:{fin:4,retell:2,decagon:5,forethought:3,sierra:4},evidence:{
+      fin:{what:'Fin 3 Procedures can process refunds end-to-end via Stripe, Shopify.',quotes:[{t:'Resolves complex queries like damaged order claims or account troubleshooting with Procedures.',s:'Intercom Blog',u:'https://www.intercom.com/blog/whats-new-with-fin-3/'},{t:'Per-resolution billing model can make refund-heavy workflows expensive to forecast.',s:'G2',u:'https://www.g2.com/products/fin-by-intercom/reviews'}]},
+      retell:{what:'Refund/billing processing is possible via API integrations but not a primary use case.',quotes:[{t:'Handles routine transactions — but billing complexity usually still requires a human.',s:'Callrail review',u:'https://www.callrail.com/blog/retell-ai-review'}]},
+      decagon:{what:'Decagon AI Actions process refunds directly via Stripe, Shopify without human escalation. Strongest in category.',quotes:[{t:'Through integrations with Stripe and Shopify, Decagon can process refunds and update orders without escalating to a human.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'},{t:'Refund automation is one of the top ROI use cases for enterprise customers.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'}]},
+      forethought:{what:'Browser Agents (Oct 2025) can take action in billing systems. Earlier versions routed to humans.',quotes:[{t:'Realistic range of 44–87% self-resolution — billing complexity on the lower end.',s:'eesel.ai',u:'https://www.eesel.ai/blog/forethought-review'}]},
+      sierra:{what:'Sierra added PCI-compliant payments in April 2026 — agents process refunds mid-conversation.',quotes:[{t:'In April 2026, Sierra added PCI-compliant payments, allowing agents to handle financial transactions directly.',s:'Sierra Blog',u:'https://sierra.ai/blog/agent-os-2-0'}]},
+    }},
+    {name:'Booking & reservation mgmt',desc:'Changes, upgrades, add-ons',scores:{fin:3,retell:4,decagon:3,forethought:2,sierra:4},evidence:{
+      fin:{what:'Can modify bookings via 3rd party integrations — requires configuration.',quotes:[{t:'MCP/data connectors let Fin read and write to complicated 3rd party systems.',s:'myaskai.com',u:'https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026'}]},
+      retell:{what:'Appointment and booking management is a core Retell use case — primary documented scenario.',quotes:[{t:'Agents can answer questions, schedule appointments, and resolve administrative issues.',s:'Retell AI',u:'https://www.retellai.com/'},{t:'Teams using Retell report up to 80% reductions in call handling costs for booking workflows.',s:'orvera.ai',u:'https://orvera.ai/blog/retell-ai-review'}]},
+      decagon:{what:'Can manage reservations via integrations — travel/booking not the primary documented vertical.',quotes:[{t:'Decagon can handle account modifications across web chat, email, and voice.',s:'Decagon.ai',u:'https://decagon.ai/'}]},
+      forethought:{what:'Forethought focuses on routing and resolving — booking modification is not a documented use case.',quotes:[{t:'Solve handles common questions — complex multi-step booking changes are typically escalated.',s:'eesel.ai',u:'https://www.eesel.ai/blog/forethought-review'}]},
+      sierra:{what:'Sierra agents complete multi-step account actions mid-conversation including reservation changes.',quotes:[{t:'Agents can check an account balance, update a subscription, or verify a customer\'s identity without handing off.',s:'Sierra Blog',u:'https://sierra.ai/blog/better-customer-experiences-built-on-sierra'}]},
+    }},
+    {name:'Account & loyalty mgmt',desc:'Membership, points, profile updates',scores:{fin:3,retell:2,decagon:4,forethought:2,sierra:5},evidence:{
+      fin:{what:'Fin can read/write CRM systems for account changes — loyalty requires custom integration.',quotes:[{t:'Reads and writes to Salesforce, Hubspot, and many other helpdesks.',s:'myaskai.com',u:'https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026'}]},
+      retell:{what:'Voice-first; account management via voice is possible but limited versus chat/async.',quotes:[{t:'Connects with CRMs — account lookup possible but not a primary differentiator.',s:'orvera.ai',u:'https://orvera.ai/blog/retell-ai-review'}]},
+      decagon:{what:'Decagon AI Actions execute account changes — loyalty tier corrections, profile updates via Salesforce.',quotes:[{t:'Persistent user memory (Spring 2026) — agents retain context so customers do not repeat themselves.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'}]},
+      forethought:{what:'Account management is not a primary Forethought use case; complex account issues route to humans.',quotes:[{t:'Routes to the right team or individual — complex account issues typically reach specialists.',s:'Forethought.ai',u:'https://forethought.ai/platform/triage'}]},
+      sierra:{what:"Sierra's Agent Data Platform gives persistent CRM access — greets by name, remembers prior conversations.",quotes:[{t:'Giving agents memory and access to company-wide information — greeting customers by name, remembering prior conversations.',s:'Sierra Blog',u:'https://sierra.ai/blog/agent-data-platform'},{t:'Clients report CSAT scores around 90% — agents feel personalized, not robotic.',s:'G2 (Sierra)',u:'https://www.g2.com/products/sierra/reviews'}]},
+    }},
+    {name:'General FAQs',desc:'Policy questions — no account needed',scores:{fin:5,retell:4,decagon:4,forethought:5,sierra:5},evidence:{
+      fin:{what:"Fin's highest-performing use case: 67% resolution rate, 40M+ conversations.",quotes:[{t:'Resolved 40M+ conversations — FAQs are where Fin consistently delivers.',s:'Intercom Blog',u:'https://www.intercom.com/blog/whats-new-with-fin-3/'},{t:'Answers customer queries instantly without manual effort — knowledge base integration is seamless.',s:'G2',u:'https://www.g2.com/products/fin-by-intercom/reviews'}]},
+      retell:{what:'Retell handles FAQs well over voice — one of the top stated use cases.',quotes:[{t:'Handles FAQs and password resets with human-like conversation and sub-second latency.',s:'Retell AI Blog',u:'https://www.retellai.com/blog/ai-customer-support-service-guide'}]},
+      decagon:{what:'Strong FAQ deflection across chat, email, and voice with high accuracy. Served 10M+ end customers.',quotes:[{t:'FAQ deflection is among the fastest time-to-value use cases for new Decagon customers.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'}]},
+      forethought:{what:"Forethought Solve's headline use case. 65% average self-serve rate. SLA score 9.1/10 on G2.",quotes:[{t:'SLA Management feature achieves a score of 9.1 on G2 — FAQ deflection at scale.',s:'G2 aggregate',u:'https://www.g2.com/products/zendesk-forethought/reviews'},{t:'65% average self-serve rate is the honest benchmark for FAQ deflection.',s:'eesel.ai',u:'https://www.eesel.ai/blog/forethought-review'}]},
+      sierra:{what:'Sierra handles FAQs with 90% CSAT; Ghostwriter ensures grounded, accurate answers.',quotes:[{t:'CSAT around 90% — agents consistently answer questions correctly on the first attempt.',s:'G2 (Sierra)',u:'https://www.g2.com/products/sierra/reviews'}]},
+    }},
+  ]},
+  {group:'revenue',label:'Relationship & Revenue',skills:[
+    {name:'Complaint handling',desc:'De-escalation, acknowledgement, resolution',scores:{fin:3,retell:2,decagon:4,forethought:3,sierra:5},evidence:{
+      fin:{what:'Fin handles complaints but can struggle with nuance — generic responses flagged in reviews.',quotes:[{t:'Can struggle with nuance and produce generic replies on complex issues.',s:'G2',u:'https://www.g2.com/products/fin-by-intercom/reviews'},{t:'Sometimes lacks empathy — customers notice it\'s a bot.',s:'Trustpilot (Intercom)',u:'https://www.trustpilot.com/review/intercom.io'}]},
+      retell:{what:'Voice-only; tone adjustments possible but text-rich de-escalation workflows are limited.',quotes:[{t:'Conversation understanding is inconsistent — poor handling of emotionally charged scenarios.',s:'G2 (Retell)',u:'https://www.g2.com/products/retell-ai/reviews'}]},
+      decagon:{what:'AOPs enable sophisticated complaint workflows with specific escalation rules and acknowledgement steps.',quotes:[{t:'AOP Copilot converts rough SOP ideas into production-ready complaint workflows.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'},{t:'AI integration enhances customer service while maintaining a personal touch.',s:'G2 (Decagon)',u:'https://www.g2.com/products/decagon/reviews'}]},
+      forethought:{what:'Triage detects sentiment and urgency — complaint routing is a core feature, but resolution is often human-assisted.',quotes:[{t:'Triage automatically tags tickets based on sentiment, language, and urgency.',s:'Forethought.ai',u:'https://forethought.ai/platform/triage'},{t:'Customers get caught in repetitive loops — bot keeps asking the same questions rather than resolving.',s:'Trustpilot',u:'https://www.trustpilot.com/review/forethought.ai'}]},
+      sierra:{what:'Sierra tops the category — brand guardrails, tone control, 90% CSAT. Purpose-built for emotional sensitivity.',quotes:[{t:'CSAT scores around 90% — even on emotionally charged interactions.',s:'G2 (Sierra)',u:'https://www.g2.com/products/sierra/reviews'},{t:'Brand personas and guardrails define the agent\'s voice, tone, formality level, and policy boundaries.',s:'Sierra',u:'https://sierra.ai/blog/better-customer-experiences-built-on-sierra'}]},
+    }},
+    {name:'Upsell & cross-sell',desc:'Revenue opportunities during support',scores:{fin:2,retell:1,decagon:2,forethought:1,sierra:3},evidence:{
+      fin:{what:'Not a documented primary feature. Custom Procedures can be configured for upsell prompts.',quotes:[{t:'Fin is designed for resolution, not sales — upsell use cases require custom Procedures setup.',s:'myaskai.com',u:'https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026'}]},
+      retell:{what:'Voice agents can be scripted for upsell moments but no native upsell intelligence is documented.',quotes:[{t:'Retell is primarily inbound resolution — outbound or in-call upsell requires custom scripting.',s:'callease.ai',u:'https://callease.ai/blog/retell-ai-review/'}]},
+      decagon:{what:'Not a documented Decagon feature. Could be built with AOPs but no public upsell use cases cited.',quotes:[{t:'Decagon focuses on resolution accuracy and policy compliance — revenue growth features are not yet a differentiator.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'}]},
+      forethought:{what:'No documented upsell capability. Focused on deflection and routing, not revenue expansion.',quotes:[{t:'Forethought focuses on resolution and triage — not built for growth or upsell use cases.',s:'Lorikeet CX',u:'https://www.lorikeetcx.ai/articles/forethought-alternatives-2026'}]},
+      sierra:{what:'Sierra can be configured for proactive upsell moments via Agent Data Platform. Not heavily marketed but referenced.',quotes:[{t:'Agents take initiative on the customer\'s behalf — surfacing insights and relevant offers.',s:'Sierra Blog',u:'https://sierra.ai/blog/agent-data-platform'},{t:'Brand guardrails can include when and how to offer upgrades — without being pushy.',s:'serviceagent.ai',u:'https://serviceagent.ai/blogs/sierra-ai-review/'}]},
+    }},
+    {name:'Proactive resolution',desc:'Anticipating follow-up needs',scores:{fin:3,retell:3,decagon:4,forethought:3,sierra:4},evidence:{
+      fin:{what:'Fin Operator (GA summer 2026) is designed for proactive optimization.',quotes:[{t:'Fin Operator enters early access — an AI agent designed to manage and optimize Fin proactively.',s:'VentureBeat',u:'https://venturebeat.com/technology/intercom-now-called-fin-launches-an-ai-agent-whose-only-job-is-managing-another-ai-agent'}]},
+      retell:{what:'Outbound calls — proactive follow-up and renewal calls are documented use cases.',quotes:[{t:'Outbound voice agents — agents can initiate calls for renewals, follow-ups, or outreach.',s:'orvera.ai',u:'https://orvera.ai/blog/retell-ai-review'}]},
+      decagon:{what:'Spring 2026: Decagon added proactive outbound agents for renewals, follow-ups, and outreach.',quotes:[{t:'Spring 2026: proactive outbound agents and an AI debugging workbench.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'},{t:'Agents can initiate calls for renewals and follow-ups — outbound voice launched Spring 2026.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'}]},
+      forethought:{what:"Forethought Discover finds knowledge gaps proactively. Not customer-facing proactive outreach.",quotes:[{t:'Forethought Discover — knowledge gap discovery helps surface what customers need before they ask again.',s:'PixieBrix',u:'https://www.pixiebrix.com/tool/forethought'}]},
+      sierra:{what:"Agent Data Platform enables agents to take initiative — surfacing insights and next steps.",quotes:[{t:'Giving agents memory to deliver truly personalized service — taking initiative on the customer\'s behalf.',s:'Sierra Blog',u:'https://sierra.ai/blog/agent-data-platform'}]},
+    }},
+  ]},
+  {group:'trust',label:'Trust & Compliance',skills:[
+    {name:'Authentication & identity',desc:'Credential verification before account access',scores:{fin:3,retell:4,decagon:4,forethought:2,sierra:4},evidence:{
+      fin:{what:'Can verify identity through integrations — requires configuration. Not a native auth flow.',quotes:[{t:'MCP/data connectors let Fin retrieve real-time customer data — identity checks require integration setup.',s:'myaskai.com',u:'https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026'}]},
+      retell:{what:"Retell's flow builder has reusable identity verification components — a production-ready pattern.",quotes:[{t:'Components let you package identity verification as a reusable flow and deploy it across different agents.',s:'Retell AI Blog',u:'https://www.retellai.com/blog/ai-voice-agents-in-2026'},{t:'Fully compliant with HIPAA, SOC2 Type II, and GDPR.',s:'orvera.ai',u:'https://orvera.ai/blog/retell-ai-review'}]},
+      decagon:{what:'Verifies identity via Stripe and Shopify before account access. Documented as a core AOP step.',quotes:[{t:'Decagon can verify identity and create tickets without escalating to a human.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'},{t:'Watchtower QA monitoring ensures auth steps are not skipped in production.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'}]},
+      forethought:{what:'Authentication is not a primary capability — tickets requiring identity verification route to humans.',quotes:[{t:'Routes complex or sensitive queries to the right specialist — auth verification is typically a human task.',s:'Forethought.ai',u:'https://forethought.ai/platform/triage'}]},
+      sierra:{what:'PCI-compliant with identity verification as part of its action framework. SOC2 certified.',quotes:[{t:'In April 2026, Sierra added PCI-compliant payments — agents handle financial transactions securely.',s:'Sierra Blog',u:'https://sierra.ai/blog/agent-os-2-0'},{t:'Built for companies with compliance and legal teams — end-to-end encryption and strict identity controls.',s:'myaskai.com',u:'https://myaskai.com/blog/sierra-ai-complete-guide-2026'}]},
+    }},
+    {name:'Policy enforcement',desc:'Holding policy under adversarial pressure',scores:{fin:3,retell:2,decagon:5,forethought:3,sierra:5},evidence:{
+      fin:{what:'Fin 3 Procedures enable policy-grounded workflows with deterministic controls.',quotes:[{t:'Natural language instructions combined with deterministic controls so Fin follows policies and takes secure actions.',s:'Intercom Blog',u:'https://www.intercom.com/blog/whats-new-with-fin-3/'},{t:'Simulations ensure Fin behaves as expected before changes reach customers.',s:'Intercom Blog',u:'https://www.intercom.com/blog/whats-new-with-fin-3/'}]},
+      retell:{what:'Voice agents follow scripts and decision trees — adversarial policy enforcement not well documented.',quotes:[{t:'Conversation flow agents support multiple nodes — scripted paths can enforce policies.',s:'orvera.ai',u:'https://orvera.ai/blog/retell-ai-review'}]},
+      decagon:{what:"AOPs are Decagon's primary differentiator — designed for policy compliance. Watchtower monitors adherence.",quotes:[{t:'Agent Operating Procedures define complex support workflows — the core differentiator for policy-heavy enterprises.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'},{t:'Watchtower QA monitoring ensures policy adherence — Trace View makes it auditable.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'}]},
+      forethought:{what:'Autoflows can enforce routing-level policies — resolution-level policies require custom configuration.',quotes:[{t:'Building and maintaining triage workflows takes real ongoing effort — non-trivial without a dedicated admin.',s:'G2',u:'https://www.g2.com/products/zendesk-forethought/reviews'}]},
+      sierra:{what:"Brand guardrails define precise policy boundaries — what agents can and cannot say or do. Mandatory audit trails.",quotes:[{t:'Brand personas and guardrails let organizations define policy boundaries — what the agent can and cannot say or do.',s:'Sierra',u:'https://sierra.ai/blog/better-customer-experiences-built-on-sierra'},{t:'Strict PII redaction, audit trails, and supervision tools — built for legal compliance requirements.',s:'myaskai.com',u:'https://myaskai.com/blog/sierra-ai-complete-guide-2026'}]},
+    }},
+    {name:'Data privacy & PII',desc:'PII handling, masking, compliance',scores:{fin:3,retell:3,decagon:4,forethought:3,sierra:5},evidence:{
+      fin:{what:'Standard enterprise compliance (GDPR, SOC2). No specific PII-masking feature documented.',quotes:[{t:'Intercom holds SOC2 Type II, ISO 27001, and GDPR compliance — standard enterprise data handling.',s:'Intercom Help',u:'https://www.intercom.com/help/en/'}]},
+      retell:{what:'HIPAA, SOC2 Type II, GDPR compliant. PII handling documented for healthcare use cases.',quotes:[{t:'Fully compliant with HIPAA, SOC2 Type II, and GDPR — ensuring voice agents meet global standards.',s:'orvera.ai',u:'https://orvera.ai/blog/retell-ai-review'}]},
+      decagon:{what:'Watchtower monitors PII handling in production. Enterprise contracts include data isolation.',quotes:[{t:'Comprehensive enterprise feature set includes Watchtower QA monitoring — tracks PII adherence.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'}]},
+      forethought:{what:'Standard enterprise compliance. No specific PII-masking feature beyond Zendesk post-acquisition.',quotes:[{t:'Post-acquisition, data practices align with Zendesk\'s enterprise compliance framework.',s:'futurumgroup.com',u:'https://futurumgroup.com/insights/will-zendesks-forethought-acquisition-enable-true-agentic-resolutions/'}]},
+      sierra:{what:'PII redaction is native, data never used to train public models, mandatory audit trails.',quotes:[{t:'Strict PII redaction, audit trails — customer data is not used to train public models.',s:'Sierra',u:'https://sierra.ai/blog/agent-os-2-0'},{t:'End-to-end encryption — built for companies with compliance and legal teams.',s:'myaskai.com',u:'https://myaskai.com/blog/sierra-ai-complete-guide-2026'}]},
+    }},
+  ]},
+  {group:'convo',label:'Conversation Intelligence',skills:[
+    {name:'Emotional intelligence',desc:'Tone adaptation, frustration detection',scores:{fin:3,retell:2,decagon:3,forethought:4,sierra:5},evidence:{
+      fin:{what:'Some tone awareness but no dedicated EQ module — reviews note robotic feel on emotional issues.',quotes:[{t:'Sometimes lacks empathy — customers notice it\'s a bot, especially on emotional issues.',s:'G2',u:'https://www.g2.com/products/fin-by-intercom/reviews'},{t:'Struggles with nuance — generic replies on complex emotional situations.',s:'hiverhq.com',u:'https://hiverhq.com/blog/intercom-review'}]},
+      retell:{what:'Voice tone can convey warmth but dedicated sentiment adaptation is not documented.',quotes:[{t:'Poor understanding of varied conversation scenarios — emotional handling is inconsistent.',s:'G2 (Retell)',u:'https://www.g2.com/products/retell-ai/reviews'}]},
+      decagon:{what:'AOPs can encode empathy steps but no dedicated emotional intelligence layer is documented.',quotes:[{t:'AI integration maintains a personal touch — but emotional IQ is configured via AOPs.',s:'G2 (Decagon)',u:'https://www.g2.com/products/decagon/reviews'}]},
+      forethought:{what:'Forethought Triage detects sentiment and urgency as core features — their strongest capability.',quotes:[{t:'Triage automatically tags tickets based on sentiment, language, and urgency.',s:'Forethought.ai',u:'https://forethought.ai/platform/triage'},{t:'Sentiment analysis score of 8.9 on G2 — strong category performer.',s:'G2 aggregate',u:'https://www.g2.com/products/zendesk-forethought/reviews'}]},
+      sierra:{what:'Clear leader — brand personas, tone control, 90% CSAT. Built for authentic emotional intelligence.',quotes:[{t:'The goal is an agent that sounds like the brand, not a generic bot.',s:'Sierra',u:'https://sierra.ai/blog/better-customer-experiences-built-on-sierra'},{t:'CSAT scores around 90% reflect authentic emotional intelligence, not scripted responses.',s:'G2 (Sierra)',u:'https://www.g2.com/products/sierra/reviews'}]},
+    }},
+    {name:'Multi-turn context retention',desc:'Context across long, complex conversations',scores:{fin:4,retell:3,decagon:5,forethought:3,sierra:5},evidence:{
+      fin:{what:'Fin maintains conversation context across sessions — stronger than simpler FAQ bots.',quotes:[{t:'Resolves incredibly complex queries across multi-turn conversations.',s:'Intercom Blog',u:'https://www.intercom.com/blog/whats-new-with-fin-3/'}]},
+      retell:{what:'Maintains call context within a session. Across-session memory is not a documented capability.',quotes:[{t:'Consistent context retention within the call is strong — cross-session recall not available.',s:'G2 (Retell)',u:'https://www.g2.com/products/retell-ai/reviews'}]},
+      decagon:{what:'Persistent user memory (Spring 2026) gives best-in-class cross-session context retention.',quotes:[{t:'Persistent user memory — agents retain context so customers do not repeat themselves.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'},{t:'Customers do not need to re-explain their issue — Decagon remembers across sessions.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'}]},
+      forethought:{what:'Within-session context is maintained. Across-session memory is not a documented feature.',quotes:[{t:'Solve delivers end-to-end resolutions within a conversation — cross-session recall requires CRM integration.',s:'myaskai.com',u:'https://myaskai.com/blog/forethought-ai-complete-guide-2026'}]},
+      sierra:{what:'Agent Data Platform gives cross-conversation persistent memory — references past interactions by name.',quotes:[{t:'Accessing CRM records and customer profiles — giving agents persistent memory across conversations.',s:'Sierra Blog',u:'https://sierra.ai/blog/agent-data-platform'},{t:'A few reviews mention the AI can get lost during longer conversations — rare but noted.',s:'G2 (Sierra)',u:'https://www.g2.com/products/sierra/reviews'}]},
+    }},
+  ]},
+  {group:'handoff',label:'Handoff & Reach',skills:[
+    {name:'Escalation detection',desc:'Explicit + implicit escalation signals',scores:{fin:4,retell:3,decagon:4,forethought:5,sierra:4},evidence:{
+      fin:{what:'Detects explicit escalation requests and routes. Implicit signal detection improving with Fin 3.',quotes:[{t:'Fin escalates when it cannot resolve — deterministic controls prevent infinite loops.',s:'Intercom Help',u:'https://www.intercom.com/help/en/articles/7120684-fin-ai-agent-explained'}]},
+      retell:{what:'Can detect escalation triggers in voice — implicit signal detection across complex scenarios not well documented.',quotes:[{t:'Conversation flow agents support escalation logic as a reusable component.',s:'Retell AI Blog',u:'https://www.retellai.com/blog/ai-voice-agents-in-2026'}]},
+      decagon:{what:'AOPs define precise escalation rules — explicit requests and implicit patterns like repeated failures.',quotes:[{t:'Agent Operating Procedures define escalation paths — complex issues reach specialists without manual sorting.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'},{t:'Performance degradation during ticket volume spikes — higher escalation rates noted.',s:'G2 (Decagon)',u:'https://www.g2.com/products/decagon/reviews'}]},
+      forethought:{what:'Forethought Triage is the category leader — sentiment + urgency + language-based escalation is their core product.',quotes:[{t:'Triage: automatically routes tickets — prioritizes urgent tickets, filters noise.',s:'Forethought.ai',u:'https://forethought.ai/platform/triage'},{t:'SLA Management achieves a score of 9.1 on G2 — escalation is their differentiator.',s:'G2 aggregate',u:'https://www.g2.com/products/zendesk-forethought/reviews'}]},
+      sierra:{what:'Sierra detects escalation signals well — praised for knowing when NOT to escalate (reducing unnecessary handoffs).',quotes:[{t:'The AI can manage high customer chat volume and solve many issues without needing human agents.',s:'G2 (Sierra)',u:'https://www.g2.com/products/sierra/reviews'}]},
+    }},
+    {name:'Human handoff execution',desc:'Context-complete transfer to human agents',scores:{fin:4,retell:4,decagon:4,forethought:4,sierra:4},evidence:{
+      fin:{what:'Native handoff to Intercom inbox — full conversation context passed. Well documented.',quotes:[{t:'Fin routes to humans when it cannot resolve — context is passed so customers do not repeat themselves.',s:'Intercom Help',u:'https://www.intercom.com/help/en/articles/7120684-fin-ai-agent-explained'}]},
+      retell:{what:"Supports live transfer with context — call context passes to the human agent.",quotes:[{t:'Live transfer — context from the voice conversation passes to the human agent.',s:'Retell AI',u:'https://www.retellai.com/'}]},
+      decagon:{what:'Clean handoff with conversation summary via Zendesk/Salesforce integration.',quotes:[{t:'Decagon hands off with full context — human agents do not need to ask customers to repeat themselves.',s:'myaskai.com',u:'https://myaskai.com/blog/decagon-ai-complete-guide-2026'}]},
+      forethought:{what:'Forethought Assist helps human agents after handoff — a dedicated product for human+AI collaboration.',quotes:[{t:'Forethought Assist — AI agent assist for customer service post-handoff.',s:'Forethought.ai',u:'https://forethought.ai/platform/assist'},{t:'Customers sometimes get caught in repetitive loops before handoff is triggered.',s:'Trustpilot',u:'https://www.trustpilot.com/review/forethought.ai'}]},
+      sierra:{what:'Sierra passes full conversation context on handoff and maintains tone continuity for the human.',quotes:[{t:'Sierra agents hand off cleanly — the human picks up with full context and history.',s:'serviceagent.ai',u:'https://serviceagent.ai/blogs/sierra-ai-review/'}]},
+    }},
+    {name:'Voice interaction',desc:'Latency, interruption, outbound calls',scores:{fin:4,retell:5,decagon:4,forethought:3,sierra:4},evidence:{
+      fin:{what:'Fin Voice is a strong documented feature — voice + image (Fin Vision) adds multimodal capability.',quotes:[{t:'Fin supports voice (Fin Voice) and image input (Fin Vision) — useful for customers who send screenshots.',s:'myaskai.com',u:'https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026'}]},
+      retell:{what:'Voice is Retell\'s core differentiator. Sub-500ms latency. 4.8/5 on G2 with 1,755 reviews.',quotes:[{t:'Shockingly natural — almost indistinguishable from a real person.',s:'G2 (Retell)',u:'https://www.g2.com/products/retell-ai/reviews'},{t:'Confirmed leader in responsiveness by independent benchmarks — approximately 600ms latency.',s:'Retell AI Blog',u:'https://www.retellai.com/blog/ai-voice-agents-in-2026'},{t:'85% of G2 users rated the voice recognition features highly.',s:'G2 aggregate',u:'https://www.g2.com/products/retell-ai/reviews'}]},
+      decagon:{what:'Added voice with sub-second latency in Spring 2026. Outbound voice also available.',quotes:[{t:'Decagon added voice with sub-second latency and outbound voice in Spring 2026.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'}]},
+      forethought:{what:'Launched Voice AI in March 2025 via Cartesia partnership. Not a primary differentiator.',quotes:[{t:'Voice AI launched in March 2025 in partnership with Cartesia.',s:'myaskai.com',u:'https://myaskai.com/blog/forethought-ai-complete-guide-2026'}]},
+      sierra:{what:"Sierra deploys across chat, SMS, WhatsApp, email, voice, and ChatGPT from a single agent config.",quotes:[{t:'Build once, deploy across all channels — chat, SMS, WhatsApp, email, voice, and ChatGPT.',s:'myaskai.com',u:'https://myaskai.com/blog/sierra-ai-complete-guide-2026'}]},
+    }},
+    {name:'Multilingual support',desc:'Language parity, auto-detection',scores:{fin:4,retell:4,decagon:3,forethought:3,sierra:4},evidence:{
+      fin:{what:'Fin supports multiple languages. Well-documented but not the primary differentiator.',quotes:[{t:'Fin supports multiple languages — aligns with global enterprise CX needs.',s:'myaskai.com',u:'https://myaskai.com/blog/intercom-fin-ai-agent-complete-guide-2026'}]},
+      retell:{what:'31+ languages with auto-detection — no language menu required.',quotes:[{t:'Retell AI supports 31+ languages with native quality speech patterns — auto-detects and adapts to the caller\'s preferred language.',s:'Retell AI Blog',u:'https://www.retellai.com/blog/ai-voice-agents-in-2026'}]},
+      decagon:{what:'Multilingual is supported but not a primary differentiator in public documentation or reviews.',quotes:[{t:'Decagon handles conversations across chat, email, and voice — multilingual not heavily documented.',s:'eesel.ai',u:'https://www.eesel.ai/blog/decagon-ai-review'}]},
+      forethought:{what:'Triage detects language and routes accordingly. Solve handles multiple languages within Zendesk.',quotes:[{t:'Triage automatically tags tickets based on sentiment, language, and urgency.',s:'Forethought.ai',u:'https://forethought.ai/platform/triage'}]},
+      sierra:{what:'Ghostwriter produces agents in 30+ languages with full policy accuracy in one deployment.',quotes:[{t:'Ghostwriter produces a production-ready agent across voice, chat, and email in 30+ languages.',s:'Sierra Blog',u:'https://sierra.ai/blog/agent-os-2-0'}]},
+    }},
+  ]},
+];
 const RADAR_SKILLS = [
   {id:'refund', label:'Refund & billing', group:'Core resolution', scores:{fin:42, salesforce:55, decagon:76}},
   {id:'complaint', label:'Complaint handling', group:'Conversation quality', scores:{fin:35, salesforce:43, decagon:72}},
@@ -1065,20 +1219,50 @@ function filterMatrix(group, label, btn) {
   select.querySelector('.matrix-filter-trigger')?.setAttribute('aria-expanded', 'false');
 }
 
+function escapeEvidenceHtml(value) {
+  return String(value ?? '').replace(/[&<>"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));
+}
+
 function openModal(groupIndex, skillIndex, vendorKey) {
   const trigger = window.event?.currentTarget || window.event?.target;
   const row = trigger?.closest('tr');
-  const scoreTitle = trigger?.getAttribute('title') || 'Evidence detail';
-  const skillName = row?.querySelector('.sn')?.textContent || 'Selected skill';
-  const skillDescription = row?.querySelector('.sd')?.textContent || '';
+  const fallbackTitle = trigger?.getAttribute('title') || 'Evidence detail';
+  const fallbackSkillName = row?.querySelector('.sn')?.textContent || 'Selected skill';
+  const fallbackSkillDescription = row?.querySelector('.sd')?.textContent || '';
   const modal = document.getElementById('evidenceModal');
+  const group = MARKET_EVIDENCE[groupIndex];
+  const skill = group?.skills?.[skillIndex];
+  const vendor = MARKET_VENDOR_META[vendorKey] || {label: vendorKey};
+  const score = skill?.scores?.[vendorKey] ?? (Number(trigger?.textContent) || 0);
+  const label = MARKET_SCORE_LABEL[score] || 'N/A';
+  const color = MARKET_SCORE_COLOR[score] || MARKET_SCORE_COLOR[0];
+  const evidence = skill?.evidence?.[vendorKey];
+  const skillName = skill?.name || fallbackSkillName;
+  const skillDescription = skill?.desc || fallbackSkillDescription;
+  const groupLabel = group?.label || 'Market evidence';
+  const quotes = (evidence?.quotes || []).map(quote => {
+    const text = escapeEvidenceHtml(quote.t);
+    const source = escapeEvidenceHtml(quote.s || 'Source');
+    const url = escapeEvidenceHtml(quote.u || '#');
+    return `<div class="evidence-quote"><div class="evidence-quote-text">&ldquo;${text}&rdquo;</div><div class="evidence-quote-source">Source: <a href="${url}" target="_blank" rel="noopener">${source}</a></div></div>`;
+  }).join('');
 
-  document.getElementById('evidenceModalTitle').textContent = `${scoreTitle} · ${skillName}`;
-  document.getElementById('evidenceModalBody').textContent = 'Verbatim evidence is not included in this prototype export yet. This click target is wired so sourced excerpts can be attached to each vendor and skill score.';
+  document.getElementById('evidenceModalTitle').textContent = `${vendor.label} · ${skillName}`;
+  document.getElementById('evidenceModalBody').innerHTML = evidence ? `
+    <div class="evidence-score-row">
+      <div class="evidence-score-num" style="color:${color}">${score}/5</div>
+      <div><div class="evidence-score-label">${label}</div><div class="evidence-score-sub">${escapeEvidenceHtml(vendor.label)}</div></div>
+    </div>
+    <div class="evidence-section-label">What the evidence shows</div>
+    <div class="evidence-what">${escapeEvidenceHtml(evidence.what)}</div>
+    <div class="evidence-section-label">Review verbatims &amp; sources</div>
+    ${quotes || '<div class="evidence-empty">No public verbatims found for this specific skill.</div>'}
+  ` : `
+    <div class="evidence-empty">Evidence detail is not available for ${escapeEvidenceHtml(fallbackTitle)}.</div>
+  `;
   document.getElementById('evidenceModalMeta').innerHTML = `
-    <div><strong>Skill:</strong> ${skillName}${skillDescription ? ` — ${skillDescription}` : ''}</div>
-    <div><strong>Vendor key:</strong> ${vendorKey}</div>
-    <div><strong>Matrix index:</strong> group ${groupIndex}, skill ${skillIndex}</div>
+    <div><strong>Group:</strong> ${escapeEvidenceHtml(groupLabel)}</div>
+    <div><strong>Skill:</strong> ${escapeEvidenceHtml(skillName)}${skillDescription ? ` — ${escapeEvidenceHtml(skillDescription)}` : ''}</div>
   `;
 
   modal.classList.add('open');
