@@ -1,0 +1,21 @@
+README.md
+  s_8fc6ae64538944::t_6cf55bd84dcb93 5,7-8
+v2.html
+  s_8fc6ae64538944::t_2c5841543805e7 1-1112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.1",
+  "base_commit_sha": "ed60007665cbaaca3b28f3dad1ec3292bd7de9d9",
+  "prompts": {},
+  "sessions": {
+    "s_8fc6ae64538944": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019efc8f-d3ed-7a22-8812-34d489716779",
+        "model": "gpt-5.5"
+      },
+      "human_author": "Austin Bedell <abedell@g2.com>"
+    }
+  }
+}
