@@ -97,14 +97,11 @@ body{font-family:Figtree,system-ui,sans-serif;background:var(--color-g2-bg);colo
 .agent-card .bubble-legend-dot{width:8px;height:8px}
 .bubble-grid{display:flex;flex-wrap:wrap;gap:9px 12px;align-items:flex-start;justify-content:center;width:100%;margin:0}
 .bubble-cell{width:var(--bubble-size);min-height:calc(var(--bubble-size) + 24px);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;text-align:center}
-.bubble-cell.is-hidden{display:none}
 .bubble-frame{width:var(--bubble-size);height:var(--bubble-size);border-radius:50%;background:#eef1f5;border:1px solid #dbe3ee;display:flex;align-items:center;justify-content:center;box-shadow:none}
 .bubble-frame.na{background:#eef1f5}
 .bubble-dot{display:flex;align-items:center;justify-content:center;border-radius:50%;color:#fff;font-size:12px;font-weight:800;line-height:1;box-shadow:none}
 .bubble-frame.na .bubble-dot{width:100%!important;height:100%!important;color:#94a3b8;background:#eef1f5!important;border:0;box-shadow:none}
 .bubble-label{font-size:10.5px;font-weight:700;line-height:1.12;color:#64748b;max-width:calc(var(--bubble-size) - 10px)}
-.bubble-more{align-self:center;border:1px solid var(--color-g2-border);background:#fff;color:var(--color-g2-text);font-family:inherit;font-size:12px;font-weight:700;border-radius:12px;padding:7px 12px;cursor:pointer;transition:all .15s}
-.bubble-more:hover{border-color:var(--btn-sec-border);background:var(--color-g2-purple-light);color:var(--color-g2-purple)}
 
 /* TOOLTIP */
 .hex-tooltip{position:fixed;background:#1e293b;color:#f8fafc;font-size:12px;padding:8px 12px;border-radius:8px;pointer-events:none;z-index:100;display:none;max-width:200px;line-height:1.4}
@@ -751,8 +748,7 @@ function hexGradeClass(score){
 
 function buildBubbleHeatmap() {
   const grid = document.getElementById('bubbleHeatmap');
-  const visibleLimit = 12;
-  grid.innerHTML = HEX_SKILLS.map((skill, index) => {
+  grid.innerHTML = HEX_SKILLS.map((skill) => {
     const scored = skill.score !== null;
     const diameter = scored ? Math.round(Math.sqrt(skill.score / 100) * 100) : 100;
     const label = scored ? `${skill.score}%` : '&mdash;';
@@ -760,30 +756,13 @@ function buildBubbleHeatmap() {
     const gc = hexGradeClass(skill.score);
     const color = hexColor(skill.score);
 
-    return `<div class="bubble-cell ${index >= visibleLimit ? 'is-hidden' : ''}">
+    return `<div class="bubble-cell">
       <div class="bubble-frame ${scored ? '' : 'na'}" title="${skill.name}: ${scored ? `${skill.score}% · ${grade}` : grade}" data-name="${skill.name}" data-label="${scored ? `${skill.score}%` : 'Not scored'}" data-grade="${grade}" data-grade-class="${gc}">
         <div class="bubble-dot" style="width:${diameter}%;height:${diameter}%;background:${color}">${label}</div>
       </div>
       <div class="bubble-label">${skill.name}</div>
     </div>`;
   }).join('');
-
-  const hiddenCount = Math.max(0, HEX_SKILLS.length - visibleLimit);
-  let moreBtn = document.getElementById('bubbleMore');
-  if (hiddenCount > 0 && !moreBtn) {
-    moreBtn = document.createElement('button');
-    moreBtn.id = 'bubbleMore';
-    moreBtn.className = 'bubble-more';
-    moreBtn.type = 'button';
-    grid.insertAdjacentElement('afterend', moreBtn);
-  }
-  if (moreBtn) {
-    moreBtn.textContent = `Show ${hiddenCount} more`;
-    moreBtn.onclick = () => {
-      grid.querySelectorAll('.bubble-cell.is-hidden').forEach(cell => cell.classList.remove('is-hidden'));
-      moreBtn.remove();
-    };
-  }
 
   grid.querySelectorAll('.bubble-frame').forEach(dot => {
     dot.addEventListener('mouseenter', (e) => {
